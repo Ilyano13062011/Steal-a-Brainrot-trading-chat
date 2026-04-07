@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RotCord</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #2b2d31;
+      color: white;
+      padding: 10px;
+    }
+
+    .channel {
+      padding: 10px;
+      margin-top: 5px;
+      background: #3a3c42;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .channel:hover {
+      background: #5865f2;
+    }
+
+    .chat {
+      flex: 1;
+      background: #313338;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      color: white;
+    }
+
+    .message {
+      margin-bottom: 10px;
+    }
+
+    .user {
+      font-weight: bold;
+      color: #5865f2;
+    }
+
+    .system {
+      color: gray;
+      font-style: italic;
+    }
+
+    .input {
+      display: flex;
+      padding: 10px;
+      background: #383a40;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    button {
+      margin-left: 10px;
+      padding: 10px;
+      background: #5865f2;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="sidebar">
+    <h2>💬 RotCord</h2>
+    <div class="channel" onclick="switchChannel('general')"># general</div>
+    <div class="channel" onclick="switchChannel('trading')"># trading</div>
+    <div class="channel" onclick="switchChannel('memes')"># memes</div>
+  </div>
+
+  <div class="chat">
+    <div id="messages"></div>
+
+    <div class="input">
+      <input id="messageInput" placeholder="Message RotCord..." />
+      <button onclick="send()">Send</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+const socket = io("http://localhost:3000"); // CHANGE LATER
+
+let username = prompt("Enter your name") || "Guest";
+let currentChannel = "general";
+
+socket.emit("join", username);
+
+function switchChannel(channel) {
+  currentChannel = channel;
+  document.getElementById("messages").innerHTML = "";
+}
+
+function send() {
+  let input = document.getElementById("messageInput");
+  let text = input.value;
+
+  if (text === "") return;
+
+  socket.emit("message", {
+    text,
+    channel: currentChannel
+  });
+
+  input.value = "";
+}
+
+socket.on("message", (msg) => {
+  if (msg.channel === currentChannel) {
+    let div = document.createElement("div");
+    div.classList.add("message");
+
+    div.innerHTML = `<span class="user">${msg.user}</span>: ${msg.text}`;
+
+    document.getElementById("messages").appendChild(div);
+  }
+});
+
+socket.on("system", (text) => {
+  let div = document.createElement("div");
+  div.classList.add("system");
+  div.innerText = text;
+
+  document.getElementById("messages").appendChild(div);
+});
+</script>
+
+</body>
+</html>
